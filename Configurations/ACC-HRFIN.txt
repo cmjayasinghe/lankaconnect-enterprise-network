@@ -1,0 +1,188 @@
+!
+!===========================================================
+! Device: ACC-HRFIN
+! Project: LankaConnect Enterprise Network
+! Role: Access Switch (HR & Finance)
+!===========================================================
+!
+
+hostname ACC-HRFIN
+
+!
+!-----------------------------------------------------------
+! Basic Configuration
+!-----------------------------------------------------------
+!
+
+no ip domain-lookup
+
+spanning-tree mode rapid-pvst
+
+vtp domain LANKACONNECT
+vtp mode client
+vtp version 2
+
+!
+!-----------------------------------------------------------
+! Management Interface
+!-----------------------------------------------------------
+!
+
+interface Vlan110
+ description Management VLAN
+ ip address 192.168.10.163 255.255.255.240
+ no shutdown
+
+ip default-gateway 192.168.10.161
+
+!
+!-----------------------------------------------------------
+! EtherChannel Uplink to CORE-01
+!-----------------------------------------------------------
+!
+
+interface range GigabitEthernet0/1-2
+ description Uplink-to-CORE-01
+ switchport mode trunk
+ channel-group 5 mode active
+ no shutdown
+
+interface Port-channel5
+ description EtherChannel-to-CORE-01
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,110,120,130,150
+ no shutdown
+
+!
+!-----------------------------------------------------------
+! HR Devices
+!-----------------------------------------------------------
+!
+
+interface FastEthernet0/4
+ description HR-IP-Phone
+ switchport mode access
+ switchport access vlan 10
+ switchport voice vlan 150
+ spanning-tree portfast
+
+interface FastEthernet0/6
+ description HR-PC1
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+
+interface FastEthernet0/10
+ description HR-Printer
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+
+!
+!-----------------------------------------------------------
+! Finance Devices
+!-----------------------------------------------------------
+!
+
+interface FastEthernet0/5
+ description Finance-IP-Phone
+ switchport mode access
+ switchport access vlan 20
+ switchport voice vlan 150
+ spanning-tree portfast
+
+interface FastEthernet0/7
+ description Finance-PC1
+ switchport mode access
+ switchport access vlan 20
+ spanning-tree portfast
+
+interface FastEthernet0/11
+ description Finance-Printer
+ switchport mode access
+ switchport access vlan 20
+ spanning-tree portfast
+
+!
+!-----------------------------------------------------------
+! Wireless Access Point
+!-----------------------------------------------------------
+!
+
+interface FastEthernet0/20
+ description AP-HR
+ switchport mode access
+ switchport access vlan 130
+ spanning-tree portfast
+
+!
+!-----------------------------------------------------------
+! Port Security
+!-----------------------------------------------------------
+!
+
+interface range FastEthernet0/4-24
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+!
+!-----------------------------------------------------------
+! BPDU Guard
+!-----------------------------------------------------------
+!
+
+spanning-tree portfast default
+spanning-tree portfast bpduguard default
+
+!
+!-----------------------------------------------------------
+! DHCP Snooping
+!-----------------------------------------------------------
+!
+
+ip dhcp snooping
+ip dhcp snooping vlan 10,20,110,120,130,150
+
+interface Port-channel5
+ ip dhcp snooping trust
+
+!
+!-----------------------------------------------------------
+! Dynamic ARP Inspection
+!-----------------------------------------------------------
+!
+
+ip arp inspection vlan 10,20,110,120,130,150
+
+interface Port-channel5
+ ip arp inspection trust
+
+!
+!-----------------------------------------------------------
+! Storm Control
+!-----------------------------------------------------------
+!
+
+interface range FastEthernet0/4-24
+ storm-control broadcast level 5.00
+
+!
+!-----------------------------------------------------------
+! Root Guard
+!-----------------------------------------------------------
+!
+
+interface range FastEthernet0/4-24
+ spanning-tree guard root
+
+!
+!-----------------------------------------------------------
+! Save Configuration
+!-----------------------------------------------------------
+!
+
+end
+
+write memory

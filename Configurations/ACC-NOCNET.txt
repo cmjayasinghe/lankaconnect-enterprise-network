@@ -1,0 +1,189 @@
+!
+!===========================================================
+! Device: ACC-NOCNET
+! Project: LankaConnect Enterprise Network
+! Role: Access Switch (NOC & Network Engineering)
+!===========================================================
+!
+
+hostname ACC-NOCNET
+
+!
+!-----------------------------------------------------------
+! Basic Configuration
+!-----------------------------------------------------------
+!
+
+no ip domain-lookup
+
+spanning-tree mode rapid-pvst
+
+vtp domain LANKACONNECT
+vtp mode client
+vtp version 2
+
+!
+!-----------------------------------------------------------
+! Management Interface
+!-----------------------------------------------------------
+!
+
+interface Vlan110
+ description Management VLAN
+ ip address 192.168.10.166 255.255.255.240
+ no shutdown
+
+ip default-gateway 192.168.10.161
+
+!
+!-----------------------------------------------------------
+! EtherChannel Uplink to CORE-01
+!-----------------------------------------------------------
+!
+
+interface range GigabitEthernet0/1-2
+ description Uplink-to-CORE-01
+ switchport mode trunk
+ channel-group 2 mode active
+ no shutdown
+
+interface Port-channel2
+ description EtherChannel-to-CORE-01
+ switchport mode trunk
+ switchport trunk allowed vlan 50,60,110,120,130,150
+ no shutdown
+
+!
+!-----------------------------------------------------------
+! NOC Department
+!-----------------------------------------------------------
+!
+
+interface FastEthernet0/4
+ description NOC-IP-PHONE
+ switchport mode access
+ switchport access vlan 50
+ switchport voice vlan 150
+ spanning-tree portfast
+
+interface FastEthernet0/6
+ description NOC-PC1
+ switchport mode access
+ switchport access vlan 50
+ spanning-tree portfast
+
+interface FastEthernet0/10
+ description NOC-PRINTER
+ switchport mode access
+ switchport access vlan 50
+ spanning-tree portfast
+
+!
+!-----------------------------------------------------------
+! Network Engineering Department
+!-----------------------------------------------------------
+!
+
+interface FastEthernet0/5
+ description NETENG-IP-PHONE
+ switchport mode access
+ switchport access vlan 60
+ switchport voice vlan 150
+ spanning-tree portfast
+
+interface FastEthernet0/7
+ description NETENG-PC1
+ switchport mode access
+ switchport access vlan 60
+ spanning-tree portfast
+
+interface FastEthernet0/11
+ description NETENG-PRINTER
+ switchport mode access
+ switchport access vlan 60
+ spanning-tree portfast
+
+!
+!-----------------------------------------------------------
+! Wireless Access Point
+!-----------------------------------------------------------
+!
+
+interface FastEthernet0/20
+ description AP-NOC
+ switchport mode access
+ switchport access vlan 130
+ spanning-tree portfast
+
+!
+!-----------------------------------------------------------
+! Port Security
+!-----------------------------------------------------------
+!
+
+interface range FastEthernet0/4-24
+ switchport port-security
+ switchport port-security maximum 2
+ switchport port-security mac-address sticky
+ switchport port-security violation shutdown
+
+!
+!-----------------------------------------------------------
+! BPDU Guard
+!-----------------------------------------------------------
+!
+
+spanning-tree portfast default
+spanning-tree portfast bpduguard default
+
+!
+!-----------------------------------------------------------
+! DHCP Snooping
+!-----------------------------------------------------------
+!
+
+ip dhcp snooping
+
+ip dhcp snooping vlan 50,60,110,120,130,150
+
+interface range GigabitEthernet0/1-2
+ ip dhcp snooping trust
+
+!
+!-----------------------------------------------------------
+! Dynamic ARP Inspection (DAI)
+!-----------------------------------------------------------
+!
+
+ip arp inspection vlan 50,60,110,120,130,150
+
+interface range GigabitEthernet0/1-2
+ ip arp inspection trust
+
+!
+!-----------------------------------------------------------
+! Storm Control
+!-----------------------------------------------------------
+!
+
+interface range FastEthernet0/4-24
+ storm-control broadcast level 5.00
+
+!
+!-----------------------------------------------------------
+! Root Guard
+!-----------------------------------------------------------
+!
+
+interface range FastEthernet0/4-24
+ spanning-tree guard root
+
+!
+!-----------------------------------------------------------
+! Save Configuration
+!-----------------------------------------------------------
+!
+
+end
+
+write memory

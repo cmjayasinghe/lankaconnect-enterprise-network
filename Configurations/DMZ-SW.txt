@@ -1,0 +1,213 @@
+!
+!===========================================================
+! Device: DMZ-SW
+! Project: LankaConnect Enterprise Network
+! Role: DMZ Access Switch
+!===========================================================
+!
+
+hostname DMZ-SW
+
+!
+!-----------------------------------------------------------
+! Basic Configuration
+!-----------------------------------------------------------
+!
+
+no ip domain-lookup
+
+service timestamps debug datetime msec
+service timestamps log datetime msec
+
+spanning-tree mode rapid-pvst
+
+vtp domain LANKACONNECT
+vtp mode client
+vtp version 2
+
+!
+!-----------------------------------------------------------
+! Management Interface
+!-----------------------------------------------------------
+!
+
+interface Vlan110
+ description Management VLAN
+
+ ip address 192.168.10.168 255.255.255.240
+
+ no shutdown
+
+ip default-gateway 192.168.10.161
+
+!
+!-----------------------------------------------------------
+! Uplink to ASA Firewall
+!-----------------------------------------------------------
+!
+
+interface GigabitEthernet0/1
+
+ description Uplink-to-ASA-DMZ
+
+ switchport mode access
+
+ switchport access vlan 100
+
+ spanning-tree portfast
+
+ no shutdown
+
+!
+!-----------------------------------------------------------
+! ERP Server
+!-----------------------------------------------------------
+!
+
+interface FastEthernet0/2
+
+ description ERP-SERVER
+
+ switchport mode access
+
+ switchport access vlan 100
+
+ spanning-tree portfast
+
+ no shutdown
+
+!
+!-----------------------------------------------------------
+! Mail Server
+!-----------------------------------------------------------
+!
+
+interface FastEthernet0/3
+
+ description MAIL-SERVER
+
+ switchport mode access
+
+ switchport access vlan 100
+
+ spanning-tree portfast
+
+ no shutdown
+
+!
+!-----------------------------------------------------------
+! File Server
+!-----------------------------------------------------------
+!
+
+interface FastEthernet0/4
+
+ description FILE-SERVER
+
+ switchport mode access
+
+ switchport access vlan 100
+
+ spanning-tree portfast
+
+ no shutdown
+
+!
+!-----------------------------------------------------------
+! AD / DNS Server
+!-----------------------------------------------------------
+!
+
+interface FastEthernet0/5
+
+ description AD-DNS-SERVER
+
+ switchport mode access
+
+ switchport access vlan 100
+
+ spanning-tree portfast
+
+ no shutdown
+
+!
+!-----------------------------------------------------------
+! Port Security
+!-----------------------------------------------------------
+!
+
+interface range FastEthernet0/2-5
+
+ switchport port-security
+
+ switchport port-security maximum 1
+
+ switchport port-security mac-address sticky
+
+ switchport port-security violation shutdown
+
+!
+!-----------------------------------------------------------
+! BPDU Guard
+!-----------------------------------------------------------
+!
+
+spanning-tree portfast default
+
+spanning-tree portfast bpduguard default
+
+!
+!-----------------------------------------------------------
+! DHCP Snooping
+!-----------------------------------------------------------
+!
+
+ip dhcp snooping
+
+ip dhcp snooping vlan 100
+
+interface GigabitEthernet0/1
+
+ ip dhcp snooping trust
+
+!
+!-----------------------------------------------------------
+! Dynamic ARP Inspection
+!-----------------------------------------------------------
+!
+
+ip arp inspection vlan 100
+
+interface GigabitEthernet0/1
+
+ ip arp inspection trust
+
+!
+!-----------------------------------------------------------
+! Storm Control
+!-----------------------------------------------------------
+!
+
+interface range FastEthernet0/2-5
+
+ storm-control broadcast level 5.00
+
+!
+!-----------------------------------------------------------
+! Root Guard
+!-----------------------------------------------------------
+!
+
+interface range FastEthernet0/2-5
+
+ spanning-tree guard root
+
+!
+!-----------------------------------------------------------
+! Save Configuration
+!-----------------------------------------------------------
+!
+
+end
+
+write memory

@@ -1,0 +1,220 @@
+!
+!===========================================================
+! Device: ASA-FW
+! Project: LankaConnect Enterprise Network
+! Role: Enterprise Firewall
+! Cisco ASA 5506-X
+!===========================================================
+!
+
+hostname ASA-FW
+
+enable password class
+
+!
+!-----------------------------------------------------------
+! Interface Configuration
+!-----------------------------------------------------------
+!
+
+interface GigabitEthernet1/1
+ description Outside-to-SLT-ISP
+ nameif outside
+ security-level 0
+ ip address 203.94.95.2 255.255.255.252
+ no shutdown
+
+!
+
+interface GigabitEthernet1/2
+ description Inside-to-CORE-01
+ nameif inside
+ security-level 100
+ ip address 192.168.254.5 255.255.255.252
+ no shutdown
+
+!
+
+interface GigabitEthernet1/3
+ description DMZ
+ nameif dmz
+ security-level 50
+ ip address 10.10.10.1 255.255.255.240
+ no shutdown
+
+!
+!-----------------------------------------------------------
+! Routing
+!-----------------------------------------------------------
+!
+
+route outside 0.0.0.0 0.0.0.0 203.94.95.1
+
+route inside 192.168.10.0 255.255.255.0 192.168.254.6
+
+route inside 10.20.0.0 255.255.254.0 192.168.254.6
+
+route inside 172.16.10.0 255.255.255.0 192.168.254.6
+
+!
+!-----------------------------------------------------------
+! Network Objects
+!-----------------------------------------------------------
+!
+
+object network INSIDE-NET
+ subnet 192.168.10.0 255.255.255.0
+
+object network WIFI-NET
+ subnet 10.20.0.0 255.255.254.0
+
+object network VOICE-NET
+ subnet 172.16.10.0 255.255.255.0
+
+object network ERP-SERVER
+ host 10.10.10.2
+
+object network MAIL-SERVER
+ host 10.10.10.3
+
+object network FILE-SERVER
+ host 10.10.10.4
+
+object network DNS-SERVER
+ host 192.168.10.146
+
+!
+!-----------------------------------------------------------
+! Dynamic PAT
+!-----------------------------------------------------------
+!
+
+object network INSIDE-NET
+ nat (inside,outside) dynamic interface
+
+object network WIFI-NET
+ nat (inside,outside) dynamic interface
+
+object network VOICE-NET
+ nat (inside,outside) dynamic interface
+
+!
+!-----------------------------------------------------------
+! Static NAT
+!-----------------------------------------------------------
+!
+
+object network ERP-SERVER
+ nat (dmz,outside) static 203.94.95.10
+
+object network MAIL-SERVER
+ nat (dmz,outside) static 203.94.95.20
+
+object network FILE-SERVER
+ nat (dmz,outside) static 203.94.95.30
+
+!
+!-----------------------------------------------------------
+! Access Control Lists
+!-----------------------------------------------------------
+!
+
+access-list OUTSIDE-IN extended permit tcp any host 203.94.95.10 eq 80
+
+access-list OUTSIDE-IN extended permit tcp any host 203.94.95.10 eq 443
+
+access-list OUTSIDE-IN extended permit tcp any host 203.94.95.20 eq 25
+
+access-list OUTSIDE-IN extended permit tcp any host 203.94.95.20 eq 110
+
+access-list OUTSIDE-IN extended permit tcp any host 203.94.95.20 eq 143
+
+access-list OUTSIDE-IN extended permit tcp any host 203.94.95.20 eq 587
+
+access-list OUTSIDE-IN extended permit tcp any host 203.94.95.20 eq 993
+
+access-list OUTSIDE-IN extended permit udp any host 192.168.10.146 eq domain
+
+access-group OUTSIDE-IN in interface outside
+
+!
+!-----------------------------------------------------------
+! ICMP
+!-----------------------------------------------------------
+!
+
+icmp permit any outside
+
+!
+!-----------------------------------------------------------
+! Inspection Policy
+!-----------------------------------------------------------
+!
+
+policy-map global_policy
+
+ class inspection_default
+
+  inspect dns
+
+  inspect ftp
+
+  inspect h323 h225
+
+  inspect h323 ras
+
+  inspect ip-options
+
+  inspect netbios
+
+  inspect rsh
+
+  inspect rtsp
+
+  inspect esmtp
+
+  inspect sqlnet
+
+  inspect skinny
+
+  inspect sunrpc
+
+  inspect tftp
+
+  inspect sip
+
+  inspect xdmcp
+
+service-policy global_policy global
+
+!
+!-----------------------------------------------------------
+! Logging
+!-----------------------------------------------------------
+!
+
+logging enable
+
+logging buffered informational
+
+!
+!-----------------------------------------------------------
+! SSH Management
+!-----------------------------------------------------------
+!
+
+username admin password Cisco@123 privilege 15
+
+aaa authentication ssh console LOCAL
+
+ssh 192.168.10.0 255.255.255.0 inside
+
+ssh timeout 10
+
+!
+!-----------------------------------------------------------
+! Save Configuration
+!-----------------------------------------------------------
+!
+
+write memory

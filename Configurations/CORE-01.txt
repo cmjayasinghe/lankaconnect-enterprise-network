@@ -1,0 +1,323 @@
+!
+!===========================================================
+! Device: CORE-01
+! Project: LankaConnect Enterprise Network
+! Role: Core Layer 3 Switch
+!===========================================================
+!
+
+hostname CORE-01
+
+!
+!-----------------------------------------------------------
+! Enable Layer 3 Routing
+!-----------------------------------------------------------
+!
+
+ip routing
+
+!
+!-----------------------------------------------------------
+! VTP Configuration
+!-----------------------------------------------------------
+!
+
+vtp domain LANKACONNECT
+vtp mode server
+vtp version 2
+
+!
+!-----------------------------------------------------------
+! VLAN Configuration
+!-----------------------------------------------------------
+!
+
+vlan 10
+ name HR
+
+vlan 20
+ name FINANCE
+
+vlan 30
+ name SALES
+
+vlan 40
+ name ADMIN
+
+vlan 50
+ name NOC
+
+vlan 60
+ name NETENG
+
+vlan 70
+ name SOC
+
+vlan 80
+ name CLOUD
+
+vlan 90
+ name SOFTWARE
+
+vlan 100
+ name SERVER
+
+vlan 110
+ name MANAGEMENT
+
+vlan 120
+ name GUEST-WIFI
+
+vlan 130
+ name EMPLOYEE-WIFI
+
+vlan 150
+ name VOICE
+
+!
+!-----------------------------------------------------------
+! EtherChannel Configuration
+!-----------------------------------------------------------
+!
+
+interface range GigabitEthernet1/0/2-3
+ description ACC-SALES
+ switchport mode trunk
+ channel-group 1 mode active
+
+interface Port-channel1
+ description Uplink-ACC-SALES
+ switchport mode trunk
+
+!
+
+interface range GigabitEthernet1/0/4-5
+ description ACC-NOCNET
+ switchport mode trunk
+ channel-group 2 mode active
+
+interface Port-channel2
+ description Uplink-ACC-NOCNET
+ switchport mode trunk
+
+!
+
+interface range GigabitEthernet1/0/6-7
+ description ACC-CLOUDSOC
+ switchport mode trunk
+ channel-group 3 mode active
+
+interface Port-channel3
+ description Uplink-ACC-CLOUDSOC
+ switchport mode trunk
+
+!
+
+interface range GigabitEthernet1/0/8-9
+ description ACC-ADMIN
+ switchport mode trunk
+ channel-group 4 mode active
+
+interface Port-channel4
+ description Uplink-ACC-ADMIN
+ switchport mode trunk
+
+!
+
+interface range GigabitEthernet1/0/10-11
+ description ACC-HRFIN
+ switchport mode trunk
+ channel-group 5 mode active
+
+interface Port-channel5
+ description Uplink-ACC-HRFIN
+ switchport mode trunk
+
+!
+!-----------------------------------------------------------
+! Routed Links
+!-----------------------------------------------------------
+!
+
+interface GigabitEthernet1/0/12
+ description Link-to-VOICE-RTR
+ no switchport
+ ip address 192.168.254.1 255.255.255.252
+ no shutdown
+
+interface GigabitEthernet1/0/13
+ description Link-to-ASA-FW
+ no switchport
+ ip address 192.168.254.6 255.255.255.252
+ no shutdown
+
+interface GigabitEthernet1/0/14
+ description Link-to-WLC
+ switchport mode trunk
+ switchport trunk native vlan 110
+ switchport trunk allowed vlan 110,120,130
+ spanning-tree portfast trunk
+ no shutdown
+
+!
+!-----------------------------------------------------------
+! Switch Virtual Interfaces
+!-----------------------------------------------------------
+!
+
+interface Vlan10
+ description HR
+ ip address 192.168.10.1 255.255.255.240
+ ip helper-address 192.168.10.146
+ no shutdown
+
+interface Vlan20
+ description FINANCE
+ ip address 192.168.10.17 255.255.255.240
+ ip helper-address 192.168.10.146
+ no shutdown
+
+interface Vlan30
+ description SALES
+ ip address 192.168.10.33 255.255.255.240
+ ip helper-address 192.168.10.146
+ no shutdown
+
+interface Vlan40
+ description ADMIN
+ ip address 192.168.10.49 255.255.255.240
+ ip helper-address 192.168.10.146
+ no shutdown
+
+interface Vlan50
+ description NOC
+ ip address 192.168.10.65 255.255.255.240
+ ip helper-address 192.168.10.146
+ no shutdown
+
+interface Vlan60
+ description NETENG
+ ip address 192.168.10.81 255.255.255.240
+ ip helper-address 192.168.10.146
+ no shutdown
+
+interface Vlan70
+ description SOC
+ ip address 192.168.10.97 255.255.255.240
+ ip helper-address 192.168.10.146
+ no shutdown
+
+interface Vlan80
+ description CLOUD
+ ip address 192.168.10.113 255.255.255.240
+ ip helper-address 192.168.10.146
+ no shutdown
+
+interface Vlan90
+ description SOFTWARE
+ ip address 192.168.10.129 255.255.255.240
+ ip helper-address 192.168.10.146
+ no shutdown
+
+interface Vlan100
+ description SERVER
+ ip address 192.168.10.145 255.255.255.240
+ no shutdown
+
+interface Vlan110
+ description MANAGEMENT
+ ip address 192.168.10.161 255.255.255.240
+ no shutdown
+
+interface Vlan120
+ description GUEST-WIFI
+ ip address 10.20.0.1 255.255.255.0
+ ip helper-address 192.168.10.146
+ no shutdown
+
+interface Vlan130
+ description EMPLOYEE-WIFI
+ ip address 10.20.1.1 255.255.255.0
+ ip helper-address 192.168.10.146
+ no shutdown
+
+interface Vlan150
+ description VOICE
+ ip address 172.16.10.1 255.255.255.0
+ ip helper-address 192.168.254.2
+ no shutdown
+
+!
+!-----------------------------------------------------------
+! OSPF
+!-----------------------------------------------------------
+!
+
+router ospf 1
+ router-id 1.1.1.1
+
+ network 192.168.10.0 0.0.0.255 area 0
+ network 10.20.0.0 0.0.1.255 area 0
+ network 172.16.10.0 0.0.0.255 area 0
+ network 192.168.254.0 0.0.0.3 area 0
+
+ passive-interface default
+ no passive-interface GigabitEthernet1/0/12
+
+!
+!-----------------------------------------------------------
+! Default Route
+!-----------------------------------------------------------
+!
+
+ip route 0.0.0.0 0.0.0.0 192.168.254.5
+
+!
+!-----------------------------------------------------------
+! STP
+!-----------------------------------------------------------
+!
+
+spanning-tree mode rapid-pvst
+
+spanning-tree vlan 1,10,20,30,40,50,60,70,80,90,100,110,120,130,150 root primary
+
+!
+!-----------------------------------------------------------
+! DHCP Snooping
+!-----------------------------------------------------------
+!
+
+ip dhcp snooping
+
+ip dhcp snooping vlan 10,20,30,40,50,60,70,80,90,100,110,120,130,150
+
+interface range GigabitEthernet1/0/2-11
+ ip dhcp snooping trust
+
+interface GigabitEthernet1/0/12
+ ip dhcp snooping trust
+
+!
+!-----------------------------------------------------------
+! Dynamic ARP Inspection
+!-----------------------------------------------------------
+!
+
+ip arp inspection vlan 10,20,30,40,50,60,70,80,90,100,110,120,130,150
+
+interface range GigabitEthernet1/0/2-11
+ ip arp inspection trust
+
+interface GigabitEthernet1/0/12
+ ip arp inspection trust
+
+!
+!-----------------------------------------------------------
+! Save Configuration
+!-----------------------------------------------------------
+!
+
+end
+
+write memory

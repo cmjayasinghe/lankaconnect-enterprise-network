@@ -1,0 +1,204 @@
+!
+!===========================================================
+! Device: VOICE-RTR
+! Project: LankaConnect Enterprise Network
+! Role: Cisco Call Manager Express (CME)
+!===========================================================
+!
+
+hostname VOICE-RTR
+
+!
+!-----------------------------------------------------------
+! Basic Configuration
+!-----------------------------------------------------------
+!
+
+no ip domain-lookup
+
+service timestamps debug datetime msec
+service timestamps log datetime msec
+
+!
+!-----------------------------------------------------------
+! Interface Configuration
+!-----------------------------------------------------------
+!
+
+interface FastEthernet0/0
+ description Link-to-CORE-01
+ ip address 192.168.254.2 255.255.255.252
+ no shutdown
+
+!
+!-----------------------------------------------------------
+! Voice VLAN Gateway
+!-----------------------------------------------------------
+!
+
+interface FastEthernet0/1
+ description Voice VLAN
+ ip address 172.16.10.254 255.255.255.0
+ no shutdown
+
+!
+!-----------------------------------------------------------
+! Routing
+!-----------------------------------------------------------
+!
+
+router ospf 1
+ router-id 2.2.2.2
+
+ network 192.168.254.0 0.0.0.3 area 0
+ network 172.16.10.0 0.0.0.255 area 0
+
+ passive-interface FastEthernet0/1
+
+!
+!-----------------------------------------------------------
+! DHCP Service for Cisco IP Phones
+!-----------------------------------------------------------
+!
+
+ip dhcp excluded-address 172.16.10.1 172.16.10.20
+
+ip dhcp pool VOICE
+
+ network 172.16.10.0 255.255.255.0
+
+ default-router 172.16.10.1
+
+ option 150 ip 172.16.10.254
+
+ dns-server 192.168.10.146
+
+!
+!-----------------------------------------------------------
+! Cisco Call Manager Express
+!-----------------------------------------------------------
+!
+
+telephony-service
+
+ max-ephones 20
+
+ max-dn 20
+
+ ip source-address 172.16.10.254 port 2000
+
+ auto assign 1 to 20
+
+ create cnf-files
+
+ time-format 24
+
+ date-format dd-mm-yy
+
+ voicemail 7000
+
+!
+
+!
+!-----------------------------------------------------------
+! Directory Numbers
+!-----------------------------------------------------------
+!
+
+ephone-dn 1
+ number 1001
+ name HR
+
+ephone-dn 2
+ number 1002
+ name FINANCE
+
+ephone-dn 3
+ number 1003
+ name SALES
+
+ephone-dn 4
+ number 1004
+ name ADMIN
+
+ephone-dn 5
+ number 1005
+ name NOC
+
+ephone-dn 6
+ number 1006
+ name NETENG
+
+ephone-dn 7
+ number 1007
+ name SOC
+
+ephone-dn 8
+ number 1008
+ name CLOUD
+
+ephone-dn 9
+ number 1009
+ name SOFTWARE
+
+ephone-dn 10
+ number 1010
+ name SERVER
+
+!
+!-----------------------------------------------------------
+! Example Phone Registrations
+!-----------------------------------------------------------
+!
+
+ephone 1
+ button 1:1
+
+ephone 2
+ button 1:2
+
+ephone 3
+ button 1:3
+
+ephone 4
+ button 1:4
+
+ephone 5
+ button 1:5
+
+ephone 6
+ button 1:6
+
+ephone 7
+ button 1:7
+
+ephone 8
+ button 1:8
+
+ephone 9
+ button 1:9
+
+ephone 10
+ button 1:10
+
+!
+!-----------------------------------------------------------
+! Optional Dial Peers
+!-----------------------------------------------------------
+!
+
+dial-peer voice 100 voip
+ destination-pattern 1...
+ session target ipv4:172.16.10.254
+ codec g711ulaw
+ no vad
+
+!
+!-----------------------------------------------------------
+! Save Configuration
+!-----------------------------------------------------------
+!
+
+end
+
+write memory
